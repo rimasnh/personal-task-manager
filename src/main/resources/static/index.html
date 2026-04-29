@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Task Manager</title>
+    <style>
+        :root {
+            --bg: #f4efe7;
+            --panel: rgba(255, 255, 255, 0.75);
+            --text: #1f2937;
+            --muted: #6b7280;
+            --accent: #0f766e;
+            --accent-dark: #115e59;
+            --warn: #b45309;
+            --border: rgba(31, 41, 55, 0.12);
+            --shadow: 0 20px 40px rgba(31, 41, 55, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Avenir Next", "Segoe UI", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(15, 118, 110, 0.18), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(180, 83, 9, 0.18), transparent 28%),
+                linear-gradient(135deg, #f7f2eb, #eef5f3);
+            min-height: 100vh;
+        }
+
+        .shell {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px 60px;
+        }
+
+        .hero {
+            margin-bottom: 28px;
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: clamp(2.2rem, 4vw, 4rem);
+            line-height: 0.95;
+            letter-spacing: -0.05em;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 680px;
+            color: var(--muted);
+            font-size: 1.05rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            border-radius: 24px;
+            backdrop-filter: blur(12px);
+            padding: 24px;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 1.15rem;
+        }
+
+        form {
+            display: grid;
+            gap: 12px;
+        }
+
+        label {
+            display: grid;
+            gap: 6px;
+            font-size: 0.92rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        input, textarea, select, button {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            font: inherit;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 160ms ease, background 160ms ease;
+        }
+
+        button:hover {
+            background: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .task-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .task-item {
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(15, 118, 110, 0.12);
+            cursor: pointer;
+            transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .task-item:hover {
+            transform: translateY(-1px);
+            border-color: rgba(15, 118, 110, 0.35);
+            box-shadow: 0 12px 28px rgba(15, 118, 110, 0.12);
+        }
+
+        .task-item.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.14);
+        }
+
+        .task-item h3 {
+            margin: 0 0 6px;
+            font-size: 1.05rem;
+        }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .chip {
+            background: rgba(15, 118, 110, 0.1);
+            color: var(--accent-dark);
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+        }
+
+        .hint, .empty {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .panel-note {
+            margin: -6px 0 14px;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .toolbar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .toolbar button {
+            align-self: end;
+        }
+
+        .form-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+        }
+
+        .secondary-button {
+            background: rgba(15, 118, 110, 0.14);
+            color: var(--accent-dark);
+            border: 1px solid rgba(15, 118, 110, 0.16);
+        }
+
+        .secondary-button:hover {
+            background: rgba(15, 118, 110, 0.2);
+        }
+
+        .suggestion {
+            white-space: pre-wrap;
+            font-family: "SF Mono", "Consolas", monospace;
+            font-size: 0.9rem;
+            background: rgba(31, 41, 55, 0.05);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="shell">
+    <section class="hero">
+        <h1>Personal Task<br>Manager</h1>
+        <p>Create tasks, review your queue, and turn natural-language reminders into structured task suggestions.</p>
+    </section>
+
+    <section class="grid">
+        <article class="card">
+            <h2 id="form-title">Create Task</h2>
+            <p id="form-note" class="panel-note">Click any task in the list to edit it here.</p>
+            <form id="task-form">
+                <input type="text" id="title" placeholder="Title" required>
+                <textarea id="description" placeholder="Description"></textarea>
+                <label for="startDate">
+                    Start Date
+                    <input type="date" id="startDate">
+                </label>
+                <label for="dueDate">
+                    Due Date
+                    <input type="date" id="dueDate">
+                </label>
+                <label for="priority">
+                    Priority
+                    <select id="priority">
+                        <option value="LOW">LOW</option>
+                        <option value="MEDIUM" selected>MEDIUM</option>
+                        <option value="HIGH">HIGH</option>
+                    </select>
+                </label>
+                <label for="status">
+                    Status
+                    <select id="status">
+                        <option value="TODO" selected>TODO</option>
+                        <option value="IN_PROGRESS">IN_PROGRESS</option>
+                        <option value="DONE">DONE</option>
+                    </select>
+                </label>
+                <div class="form-actions">
+                    <button type="submit" id="save-task-button">Save Task</button>
+                    <button type="button" id="cancel-edit-button" class="secondary-button">Cancel Edit</button>
+                </div>
+            </form>
+        </article>
+
+        <article class="card">
+            <h2>AI Suggestion</h2>
+            <p class="hint">Try: "remind me to submit the quarterly report before Friday"</p>
+            <form id="suggest-form">
+                <textarea id="suggestion-input" placeholder="Describe the task in plain language..." required></textarea>
+                <button type="submit">Generate Suggestion</button>
+            </form>
+            <div id="suggestion-output" class="suggestion" hidden></div>
+        </article>
+    </section>
+
+    <section class="card" style="margin-top: 20px;">
+        <h2>Task List</h2>
+        <div class="toolbar">
+            <label for="filter-dueDate">
+                Filter Due Date
+                <input type="date" id="filter-dueDate">
+            </label>
+            <label for="filter-priority">
+                Filter Priority
+                <select id="filter-priority">
+                    <option value="">All priorities</option>
+                    <option value="LOW">LOW</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="HIGH">HIGH</option>
+                </select>
+            </label>
+            <label for="filter-status">
+                Filter Status
+                <select id="filter-status">
+                    <option value="">All statuses</option>
+                    <option value="TODO">TODO</option>
+                    <option value="IN_PROGRESS">IN_PROGRESS</option>
+                    <option value="DONE">DONE</option>
+                </select>
+            </label>
+            <button type="button" id="refresh-tasks" class="secondary-button">Refresh Tasks</button>
+            <button type="button" id="clear-filters">Clear Filters</button>
+        </div>
+        <div id="task-list" class="task-list"></div>
+    </section>
+</div>
+
+<script>
+    const taskList = document.getElementById("task-list");
+    const taskForm = document.getElementById("task-form");
+    const suggestForm = document.getElementById("suggest-form");
+    const suggestionOutput = document.getElementById("suggestion-output");
+    const filterDueDate = document.getElementById("filter-dueDate");
+    const filterPriority = document.getElementById("filter-priority");
+    const filterStatus = document.getElementById("filter-status");
+    const clearFiltersButton = document.getElementById("clear-filters");
+    const refreshTasksButton = document.getElementById("refresh-tasks");
+    const cancelEditButton = document.getElementById("cancel-edit-button");
+    const formTitle = document.getElementById("form-title");
+    const formNote = document.getElementById("form-note");
+    const saveTaskButton = document.getElementById("save-task-button");
+    let editingTaskId = null;
+
+    async function loadTasks() {
+        const query = new URLSearchParams();
+        if (filterDueDate.value) {
+            query.set("dueDate", filterDueDate.value);
+        }
+        if (filterPriority.value) {
+            query.set("priority", filterPriority.value);
+        }
+        if (filterStatus.value) {
+            query.set("status", filterStatus.value);
+        }
+
+        const suffix = query.toString() ? `?${query.toString()}` : "";
+        const response = await fetch(`/tasks${suffix}`);
+        const tasks = await response.json();
+
+        if (!tasks.length) {
+            taskList.innerHTML = '<div class="empty">No tasks match the current view yet.</div>';
+            return;
+        }
+
+        taskList.innerHTML = tasks.map(task => `
+            <div class="task-item ${editingTaskId === task.id ? "active" : ""}" data-task-id="${task.id}">
+                <h3>${escapeHtml(task.title)}</h3>
+                <div>${escapeHtml(task.description || "No description")}</div>
+                <div class="meta">
+                    <span class="chip">Start: ${task.startDate || "None"}</span>
+                    <span class="chip">Due: ${task.dueDate || "None"}</span>
+                    <span class="chip">Priority: ${task.priority}</span>
+                    <span class="chip">Status: ${task.status}</span>
+                </div>
+            </div>
+        `).join("");
+
+        taskList.querySelectorAll(".task-item").forEach((element, index) => {
+            element.addEventListener("click", () => startEditing(tasks[index]));
+        });
+    }
+
+    taskForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        const payload = {
+            title: document.getElementById("title").value,
+            description: document.getElementById("description").value,
+            startDate: document.getElementById("startDate").value || null,
+            dueDate: document.getElementById("dueDate").value || null,
+            priority: document.getElementById("priority").value,
+            status: document.getElementById("status").value
+        };
+
+        const url = editingTaskId === null ? "/tasks" : `/tasks/${editingTaskId}`;
+        const method = editingTaskId === null ? "POST" : "PUT";
+
+        const response = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            alert(editingTaskId === null ? "Could not create task." : "Could not update task.");
+            return;
+        }
+
+        resetForm();
+        await loadTasks();
+    });
+
+    [filterDueDate, filterPriority, filterStatus].forEach(element => {
+        element.addEventListener("change", loadTasks);
+    });
+
+    clearFiltersButton.addEventListener("click", async () => {
+        filterDueDate.value = "";
+        filterPriority.value = "";
+        filterStatus.value = "";
+        await loadTasks();
+    });
+
+    refreshTasksButton.addEventListener("click", loadTasks);
+    cancelEditButton.addEventListener("click", resetForm);
+
+    suggestForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        const payload = {
+            description: document.getElementById("suggestion-input").value
+        };
+
+        const response = await fetch("/tasks/suggest", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const body = await response.json();
+        suggestionOutput.hidden = false;
+
+        if (!response.ok) {
+            suggestionOutput.textContent = body.detail || "Suggestion failed.";
+            return;
+        }
+
+        suggestionOutput.textContent = JSON.stringify(body, null, 2);
+    });
+
+    function escapeHtml(value) {
+        return value
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+    }
+
+    function startEditing(task) {
+        editingTaskId = task.id;
+        formTitle.textContent = `Edit Task #${task.id}`;
+        formNote.textContent = "Update the fields below and save to write the changes back to the database.";
+        saveTaskButton.textContent = "Update Task";
+        document.getElementById("title").value = task.title || "";
+        document.getElementById("description").value = task.description || "";
+        document.getElementById("startDate").value = task.startDate || "";
+        document.getElementById("dueDate").value = task.dueDate || "";
+        document.getElementById("priority").value = task.priority || "MEDIUM";
+        document.getElementById("status").value = task.status || "TODO";
+        loadTasks();
+    }
+
+    function resetForm() {
+        editingTaskId = null;
+        formTitle.textContent = "Create Task";
+        formNote.textContent = "Click any task in the list to edit it here.";
+        saveTaskButton.textContent = "Save Task";
+        taskForm.reset();
+        document.getElementById("priority").value = "MEDIUM";
+        document.getElementById("status").value = "TODO";
+        loadTasks();
+    }
+
+    loadTasks();
+</script>
+</body>
+</html>
